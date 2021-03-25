@@ -1,13 +1,53 @@
 import math
 import numpy
 import os
-from engineering_notation import EngNumber
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 
-G = 6.67430e-11 # m3 kg-1 s-2 (gravitational constant)
-Sun_Mass = 1.9885e30 # kg
-μ = G*Sun_Mass
+
+G: float = 6.67430e-11 # gravitational constant m3 kg-1 s-2 
+
+Sun = {"μ": 1.32712440018e20,
+       "mass": 1.9885e30,
+       "radius": 695700}
+
+# Planets
+Earth = {"μ": 3.986004418e14,
+          "mass": 5.97237e24,
+          "radius": 6378.1366}
+Mercury = {"μ": 2.2032e13,
+          "mass": 0.330114e24,
+          "radius": 2440.53}
+Venus = {"μ": 3.24859e14,
+          "mass": 4.86747e24,
+          "radius": 6051.8}
+Mars = {"μ": 4.282837e13,
+          "mass": 0.641712e24,
+          "radius": 3396.19}
+Ceres = {"μ": 6.26325e10,
+          "mass": 0.00093835e24,
+          "radius": 469.73}
+Jupiter = {"μ": 1.26686534e17,
+          "mass": 1898.187e24,
+          "radius": 71492}
+Saturn = {"μ": 3.7931187e16,
+          "mass": 568.3174e24,
+          "radius": 60268}
+Uranus = {"μ": 5.793939e15,
+          "mass": 86.8127e24,
+          "radius": 25559}
+Neptune = {"μ": 6.836529e15,
+          "mass": 102.4126e24,
+          "radius": 24764}
+Pluto = {"μ": 8.71e11,
+          "mass": 0.013030e24,
+          "radius": 1188.3}
+
+# Moons
+Moon = {"μ": 4.9048695e12,
+          "mass": 0.07342e24,
+          "radius": 1738.1,
+          "parent": "Earth" }
 
 class vec3:
     def __init__(self, x, y , z):
@@ -139,11 +179,11 @@ def calcJD(JDN, H, M, S):
     return JD
 
 class Body:
-    def __init__(self, name, mass, radius):
+    def __init__(self, name, mass, radius, μ = Sun["μ"]):
         self.name = name
         self.mass = mass
         self.radius = radius
-        self.μ = G * mass
+        self.μ = μ
 
     def loadKeplarian(self,a,e,i,Ω,ω,t=T,M=0,v=0,E=0):
         "Load available Keplerian elements"
@@ -178,11 +218,13 @@ class Body:
     def getMeanMotion(self):
         "Calculate mean motion in degrees per second"
         #self.n = math.degrees(math.sqrt(G*(Sun_Mass+self.mass)/self.a**3))
-        self.n = math.degrees(math.sqrt(G*(Sun_Mass+self.mass)/self.a**3))
+        self.n = math.degrees(math.sqrt(self.μ/self.a**3))
         return self.n
     def calcMeanAnomalyFromEpoch(self):
         "Calculate mean anomaly at time t"
         self.M = M0 + self.getMeanMotion() * (self.t - T)
+        if self.M < 0:
+            self.M = self.M % 360
         if self.M > 360:
             self.M = self.M % 360
         return self.M
@@ -199,24 +241,24 @@ class Body:
         self.v = math.degrees(v)
         return v
     def calcAngularMomentum(self):
-        self.h = math.sqrt(μ * self.a * (1 - self.e**2))
+        self.h = math.sqrt(self.μ * self.a * (1 - self.e**2))
         #self.h = self.mass * self.calcVelocityPeriapsis() * self.calcPericenter()
         return self.h
     def calcVelocityPeriapsis(self):
         "Calculate velocity at periapsis"
         t_a = self.a # m
-        self.vp = math.sqrt(((1+self.e) * μ) / ((1-self.e) * t_a))
+        self.vp = math.sqrt(((1+self.e) * self.μ) / ((1-self.e) * t_a))
         return self.vp
     def calcVelocityApoapsis(self):
         "Calculate velocity at apoapsis"
         t_a = self.a # m
-        self.va = math.sqrt(((1-self.e) * μ) / ((1+self.e) * t_a))
+        self.va = math.sqrt(((1-self.e) * self.μ) / ((1+self.e) * t_a))
         return self.va
     def calcVelocityMean(self):
-        self.vm = math.sqrt((G * Sun_Mass) / self.a) # m/s
+        self.vm = math.sqrt(self.μ / self.a) # m/s
         return self.vm
     def calcPeriod(self):
-        self.p = 2 * math.pi * math.sqrt(self.a**3 / (G * Sun_Mass))
+        self.p = 2 * math.pi * math.sqrt(self.a**3 / self.μ)
         return self.p
     def keplerianToStateVectors(self):
         self.position = vec3(0,0,0)
@@ -238,7 +280,7 @@ class Body:
         ry = r * math.sin(v)
         rz = 0
 
-        rp = math.sqrt((G*Sun_Mass)*self.a) / r
+        rp = math.sqrt(self.μ*self.a) / r
         rxd = rp * -(math.sin(E))
         ryd = rp * math.sqrt(1-self.e**2) * math.cos(E)
         rzd = 0
@@ -289,7 +331,7 @@ class Body:
         return 0
 
         
-earth = Body("Earth", 5.97237e24, 6371)
+earth = Body("Earth", Earth["mass"], Earth["radius"])
 earth.loadKeplarian(1.496534962730336e8, # a
               1.711862905357640e-2, # e
               4.181344269688850e-4, # i
@@ -354,9 +396,9 @@ Zh = []
 
 positions = [0,0,0]
 for i in range(0,700,1):
-    earth = Body("Earth", 5.97237e24, 6371)
-    venus = Body("Venus", 48.685e23, 6051.84)
-    halley1p = Body("Halley's Comet", 5000, 5.5)
+    earth = Body("Earth", Earth["mass"], Earth["radius"])
+    venus = Body("Venus", Venus["mass"], Venus["radius"])
+    halley1p = Body("Halley's Comet", 5e6, 5.5)
     earth.loadKeplarian(1.496534962730336e8, # a
               1.711862905357640e-2, # e
               4.181344269688850e-4, # i
