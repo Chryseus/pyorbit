@@ -162,6 +162,50 @@ $ E_{n+1} = \frac{E_n - \varepsilon \sin{E_n} - M }{1 - \varepsilon \cos{E_n}}-E
 
 $ v = 2 \cdot \atantwo(\sqrt{1+\varepsilon} \sin{\frac{E}{2}}, \sqrt{1-\varepsilon} \cos{\frac{E}{2}}) $
 
+\section{Keplerian elements to state vectors}
+
+$ r = a \frac{1-\varepsilon^2}{1+\varepsilon \cos{v}} $
+
+$ \begin{bmatrix}
+	x \\
+	y \\
+	z
+\end{bmatrix}
+\begin{bmatrix}
+	r \cos{v} \\
+	r \sin{v} \\
+	0
+\end{bmatrix}$
+
+$\begin{bmatrix}
+	x' \\
+	y' \\
+	z'
+\end{bmatrix}
+=
+\begin{bmatrix}
+	\cos\Omega & -\sin\Omega  & 0 \\
+	\sin\Omega & \cos\Omega  & 0  \\
+	0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+	1 & 0  & 0 \\
+	0 & \cos i  & -\sin i  \\
+	0 & \sin i & \cos i
+\end{bmatrix}
+\begin{bmatrix}
+	\cos\omega & -\sin\omega  & 0 \\
+	\sin\omega & \cos\omega  & 0  \\
+	0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+	x \\
+	y \\
+	z
+\end{bmatrix}$
+
+
+
 \end{document}
 
 
