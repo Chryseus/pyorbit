@@ -4,8 +4,13 @@ import os
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 
+# ============
+# === Data ===
+# ============
 
 G: float = 6.67430e-11 # gravitational constant m3 kg-1 s-2 
+epoch = 2451545.0 # J2000 epoch - 1 January 2000 - 12:00:00 UTC
+M0 = 3.586172562406391e2
 
 Sun = {"μ": 1.32712440018e20,
        "mass": 1.9885e30,
@@ -49,86 +54,30 @@ Moon = {"μ": 4.9048695e12,
           "radius": 1738.1,
           "parent": "Earth" }
 
+# Other objects
+
+# =========================
+# === Utility Functions ===
+# =========================
+
 class vec3:
     def __init__(self, x, y , z):
         self.x = x
         self.y = y
         self.z = z
 
-"""def calc_single_body_acceleration(bodies, body_index):
-    acceleration = vec3(0,0,0)
-    target_body = bodies[body_index]
-    for index, external_body in enumerate(bodies):
-        if index != body_index:
-            r = (target_body.position.x - external_body.position.x)**2 + (target_body.position.y - external_body.position.y)**2 + (target_body.position.z - external_body.position.z)**2
-            r = math.sqrt(r)
-            tmp = G * external_body.mass / r**3
-            acceleration.x += tmp * (external_body.position.x - target_body.position.x)
-            acceleration.y += tmp * (external_body.position.y - target_body.position.y)
-            acceleration.z += tmp * (external_body.position.z - target_body.position.z)
-    return acceleration """
-
-
-def calcEccentricAnomalyBisection(M, e, a, b, i, tol):
-    # Calculate eccentric anomaly via bisection method
-    # M = Mean anomaly in degrees
-    # e = Eccentricity
-    # a,b = interval [a,b]
-    # i = number of iterations
-    # tol = Target accuracy
-    M = math.radians(M)
-    f = lambda E: E - e * math.sin(E) - M # function
-    
-    if (f(a)*f(b)) >= 0: # ensure that there is a zero crossing in the interval
-        print("Bisection failed.")
-       
-    a_n = a
-    b_n = b
-    for n in range(1, i):
-        m_n = (a_n + b_n)/2 # midpoint
-        print("bisection = " + str(m_n))
-        f_m_n = f(m_n) # calculate function on midpoint
-        print("f(bisection)" + str(f_m_n))
-        print("a = " + str(a_n))
-        print("b = " + str(b_n))
-        print("f(a) = " + str(f(a_n)))
-        print("f(b) = " + str(f(b_n)) + "\n")
-        if (b_n - a_n) /2 < tol: # check if result is within tolerance
-            print("Tolerance met after " + str(n) + " iterations.")
-            return math.degrees(m_n)
-        elif f(a_n)*f_m_n < 0: # new interval
-                a_n = a_n
-                b_n = m_n
-        elif f(b_n)*f_m_n < 0: # # new interval
-            a_n = m_n
-            b_n = b_n
-        elif f_m_n == 0.00: # found exact result
-            print("Found exact solution")
-            return m_n
-        else:
-            print("Bisection method failed.")
-            return None
-    result = (a_n + b_n)/2 # return the midpoint we don't have the exact result
-    return math.degrees(result)
-
-
 def calcEccentricAnomalyNewton(M, e, epsilon):
-    # Calculate eccentric anomaly via Newton's method
+    "Calculate eccentric anomaly using Newton's method"
     # M = Mean anomaly in degrees
     # e = Eccentricity
     # epsilon = Target accuracy
     i = 0
     M = math.radians(M)
-    #e = math.radians(e)
     if e < 0.8:
         E = M
     else:
         E = math.pi
     
-    #print("Solving eccentric anomaly.")
-    #print("E = " + str(E))
-    #print("e = " + str(e))
-    #print("M = " + str(M))
     while E != 0:
         F = E - e * math.sin(E) - M # function
         Fp = 1 - e * math.cos(E)    # derivative
@@ -137,27 +86,13 @@ def calcEccentricAnomalyNewton(M, e, epsilon):
         E = d2
         i = i + 1
         
-        #print("Iteration " + str(i))
-        #print("f(E) = " + str(F))
-        #print("f'(E) = " + str(Fp))
-        #print("F(E) / F'(E) " + str(d))
-        #print("E - (F(E) / F'(E)) = " + str(d2) + "\n")
-        
         if i >= 40:
-            print("Failed to converge.")
+            print(f"Failed to converge after {i} iterations.")
             break
-        if math.fabs(F) < epsilon:
+        if math.fabs(F) < epsilon: # Target accuracy has been reached
             E = math.degrees(E)
-            #print("Eccentric anomaly " + str(E))
             return E
     return E
-
-# ==================================================================================================    
-
-#T = 2451545.0 # J2000 epoch
-T = 0
-M0 = 3.586172562406391e2 # Mean anomaly at epoch
-Sun_Radius = 695508 # km
 
 def calcJDN_GC(Y, M, D):
     "Calculate Julian day number from a Gregorian calendar date"
@@ -177,6 +112,12 @@ def calcJD(JDN, H, M, S):
     "Calculate Julian date from Julian day number and time"
     JD = JDN + ((H-12)/24) + (M/1440) + (S/86400)
     return JD
+def JDDeltaTimeSeconds(JD1, JD2):
+    "Calculate time difference in seconds between two Julian dates"
+    delta = JD1 - JD2
+    return delta*86400
+
+# ==================================================================================================    
 
 class Body:
     def __init__(self, name, mass, radius, μ = Sun["μ"]):
@@ -185,7 +126,7 @@ class Body:
         self.radius = radius
         self.μ = μ
 
-    def loadKeplarian(self,a,e,i,Ω,ω,t=T,M=0,v=0,E=0):
+    def loadKeplarian(self,a,e,i,Ω,ω,t=epoch,M=0,v=0,E=0):
         "Load available Keplerian elements"
         self.a = a*1000 # Semi-major axis - km (convert to meters)
         self.e = e # Eccentricity
@@ -209,11 +150,11 @@ class Body:
         return self.ApC
     def calcApoapsis(self):
         "Calculate the apoapsis in meters"
-        self.ApA = self.calcApocenter() - (Sun_Radius/1000)
+        self.ApA = self.calcApocenter() - (Sun["radius"]/1000)
         return self.ApA
     def calcPeriapsis(self):
         "Calculate periapsis in meters"
-        self.PeA = self.calcPericenter() - (Sun_Radius/1000)
+        self.PeA = self.calcPericenter() - (Sun["radius"]/1000)
         return self.PeA
     def getMeanMotion(self):
         "Calculate mean motion in degrees per second"
@@ -221,8 +162,8 @@ class Body:
         self.n = math.degrees(math.sqrt(self.μ/self.a**3))
         return self.n
     def calcMeanAnomalyFromEpoch(self):
-        "Calculate mean anomaly at time t"
-        self.M = M0 + self.getMeanMotion() * (self.t - T)
+        "Calculate mean anomaly since the epoch"
+        self.M = M0 + self.getMeanMotion() * JDDeltaTimeSeconds(self.t,epoch)
         if self.M < 0:
             self.M = self.M % 360
         if self.M > 360:
@@ -337,10 +278,10 @@ earth.loadKeplarian(1.496534962730336e8, # a
               4.181344269688850e-4, # i
               1.350829426264774e2, # Ω
               3.267259945200456e2, # ω
-              0) # t
+              calcJD(calcJDN_GC(2000,1,1),12,0,0)) # t
 
 os.system("cls")
-print ("Epoch J2000 (JD " + str(T) + ")")
+print (f"Epoch J2000 (JD {epoch}")
 print ("Julian date: " + str(calcJD(calcJDN_GC(2000,2,1),12,0,0)))
 print("Semi-major axis: " + format(earth.a,'1e') + " km")
 print("Orbit: " + format(earth.calcApocenter()/1000,'3e') + " x " + format(earth.calcPericenter()/1000,'3e') + " (" + format(earth.calcApoapsis()/1000,'3e') + " x " + format(earth.calcPeriapsis()/1000,'3e') + ") km")
@@ -395,28 +336,31 @@ Zh = []
 
 
 positions = [0,0,0]
-for i in range(0,700,1):
+epoch = calcJD(calcJDN_GC(2000,1,1),12,0,0)
+
+for i in range(0,365,1):
     earth = Body("Earth", Earth["mass"], Earth["radius"])
     venus = Body("Venus", Venus["mass"], Venus["radius"])
     halley1p = Body("Halley's Comet", 5e6, 5.5)
+
     earth.loadKeplarian(1.496534962730336e8, # a
               1.711862905357640e-2, # e
               4.181344269688850e-4, # i
               1.350829426264774e2, # Ω
               3.267259945200456e2, # ω
-              i*60*60*24) # t
+              epoch + i) # t
     venus.loadKeplarian(1.082081681708332e8, # a
               6.755786250503024e-3, # e
               3.394589648659516, # i
               7.667837463924961e1, # Ω
               5.518596653686583e1, # ω
-              i*60*60*24) # t
+              epoch + i) # t
     halley1p.loadKeplarian(2.681019359492625e9, # a
               9.672701666828314e-1, # e
               1.621960405866950e2, # i
               5.950786974713448e1, # Ω
               1.124496743913674e2, # ω
-              i*60*60*24) # t
+              epoch + i) # t
     earth.calcMeanAnomalyFromEpoch()
     venus.calcMeanAnomalyFromEpoch()
     halley1p.calcMeanAnomalyFromEpoch()
