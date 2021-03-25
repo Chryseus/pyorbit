@@ -2,12 +2,14 @@
 \usepackage{parskip}
 \usepackage{geometry}
 \usepackage{graphicx}
+\usepackage{amsmath}
 \addtolength{\oddsidemargin}{-.875in}
 \addtolength{\evensidemargin}{-.875in}
 \addtolength{\textwidth}{1.75in}
 
 \addtolength{\topmargin}{-.875in}
 \addtolength{\textheight}{1.75in}
+\DeclareMathOperator{\atantwo}{atan2}
 \begin{document}
 
 \begin{center}
@@ -93,7 +95,72 @@ $ \ell = \frac{b^2}{a} $ or $ a (1-\varepsilon^2) $
 
 \section{Time}
 
+\subsection{Gregorian Calendar to Julian Day Number}
 
+$ a = \frac{14-M}{12} $
+
+$ y = Y + 4800 - a $
+
+$ m = M + 12 a - 3 $
+
+$ J_{DN} = D + \frac{153m+2}{5} + 365y + \frac{y}{4} - \frac{y}{100} + \frac{y}{400}-32045 $
+
+Where:\\
+$M$ - Integer month (1-12)\\
+$Y$ = Year\\
+$D$ = Integer day (1-31)
+
+Note: All division is integer division which in python uses the // operator.
+
+\subsection{Julian Calendar to Julian Day Number}
+
+$ a = \frac{14-M}{12} $
+
+$ y = Y + 4800 - a $
+
+$ m = M + 12 a - 3 $
+
+$J_{DN} = D + \frac{153m+2}{5} + y365 + \frac{y}{4} - 32083$
+
+Note: All division is integer division which in python uses the // operator.
+
+\subsection{Julian Date}
+
+$ J_{D} = J_{DN} + \frac{H-12}{24} + \frac{M}{1440} + \frac{S}{86400} $
+
+Where:\\
+$H$ = Hour (0-23)\\
+$M$ = Minute (0-59)\\
+$S$ = Second (0-59)
+
+\subsection{Difference in seconds between Julian dates}
+
+$ \Delta t =  (JD_1 - JD_2) 86400 $
+
+\subsection{Mean Motion}
+
+Mean motion is how many radians of the total orbit are covered per second, naturally one full orbital period should equal 2$\pi$ radians.
+
+$ n = \sqrt{\frac{\mu}{a^3}} $
+
+\subsection{Mean Anomaly}
+
+$ M = M_0 n \Delta t $
+
+Where:\\
+$M_0$ = Mean anomaly at epoch in degrees\\
+$n$ = Mean motion in degrees/s\\
+$\Delta t$ = Time in seconds relative to the epoch
+
+\subsection{Eccentric Anomaly}
+
+Eccentric anomaly is calculated from the mean anomaly, since it's a transcendental equation it requires a root finding algorithm to solve, in this case I am using Newton's method:
+
+$ E_{n+1} = \frac{E_n - \varepsilon \sin{E_n} - M }{1 - \varepsilon \cos{E_n}}-E_n $
+
+\subsection{True Anomaly}
+
+$ v = 2 \cdot \atantwo(\sqrt{1+\varepsilon} \sin{\frac{E}{2}}, \sqrt{1-\varepsilon} \cos{\frac{E}{2}}) $
 
 \end{document}
 
