@@ -3,6 +3,7 @@ import numpy
 import os
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
+import matplotlib.animation as ani
 
 # ============
 # === Data ===
@@ -117,6 +118,14 @@ def JDDeltaTimeSeconds(JD1, JD2):
     delta = JD1 - JD2
     return delta*86400
 
+def calcSMA(ApA, PeA, r):
+    a = ((ApA+PeA) / 2) + r
+    return a
+def calcSMA_c(ApC, PeC):
+     a = ((ApA+PeA) / 2)
+     return a
+
+
 # ==================================================================================================    
 
 class Body:
@@ -126,7 +135,7 @@ class Body:
         self.radius = radius
         self.μ = μ
 
-    def loadKeplarian(self,a,e,i,Ω,ω,t=epoch,M=0,v=0,E=0):
+    def loadKeplerian(self,a,e,i,Ω,ω,t=epoch,M=0,v=0,E=0):
         "Load available Keplerian elements"
         self.a = a*1000 # Semi-major axis - km (convert to meters)
         self.e = e # Eccentricity
@@ -138,29 +147,33 @@ class Body:
         self.v = v # True Anomaly - degrees
         self.E = E # Eccentric Anomaly - degrees
         return 0
+
     def loadStateVectors(self, position, velocity):
         return 0
+
     def calcPericenter(self):
         "Calculate the pericentre distance in meters"
-        self.PeC = (1 - self.e) * (self.a) # m
+        self.PeC = (1 - self.e) * (self.a)
         return self.PeC
     def calcApocenter(self):
         "Calculate the apocentre distance in meters"
-        self.ApC = (1 + self.e) * (self.a) # m
+        self.ApC = (1 + self.e) * (self.a)
         return self.ApC
     def calcApoapsis(self):
         "Calculate the apoapsis in meters"
-        self.ApA = self.calcApocenter() - (Sun["radius"]/1000)
+        self.ApA = self.calcApocenter() - (Sun["radius"]*1000)
         return self.ApA
     def calcPeriapsis(self):
         "Calculate periapsis in meters"
-        self.PeA = self.calcPericenter() - (Sun["radius"]/1000)
+        self.PeA = self.calcPericenter() - (Sun["radius"]*1000)
         return self.PeA
+
+
     def getMeanMotion(self):
         "Calculate mean motion in degrees per second"
-        #self.n = math.degrees(math.sqrt(G*(Sun_Mass+self.mass)/self.a**3))
         self.n = math.degrees(math.sqrt(self.μ/self.a**3))
         return self.n
+
     def calcMeanAnomalyFromEpoch(self):
         "Calculate mean anomaly since the epoch"
         self.M = M0 + self.getMeanMotion() * JDDeltaTimeSeconds(self.t,epoch)
@@ -169,10 +182,12 @@ class Body:
         if self.M > 360:
             self.M = self.M % 360
         return self.M
+
     def calcEccentricAnomaly(self):
         "Calculate eccentric anomaly from mean anomaly"
         self.E = calcEccentricAnomalyNewton(self.M, self.e, 1e-15)
         return self.E
+    
     def calcTrueAnomaly(self):
         "Calculate true anomaly from eccentric anomaly"
         E = math.radians(self.E)
@@ -271,12 +286,12 @@ class Body:
         self.velocity.z = Rsum3[2,0]
 
         return 0
-    def StateVectorsToKeplarian(self):
+    def StateVectorsToKeplerian(self):
         return 0
 
         
 earth = Body("Earth", Earth["mass"], Earth["radius"])
-earth.loadKeplarian(1.496534962730336e8, # a
+earth.loadKeplerian(1.496534962730336e8, # a
               1.711862905357640e-2, # e
               4.181344269688850e-4, # i
               1.350829426264774e2, # Ω
@@ -320,6 +335,9 @@ print ("Angular momentum: " + format(earth.h,'3e'))
 
 fig = plt.figure()
 ax = plt.axes(projection = '3d')
+plot3, = ax.plot([],[],[],'bo', markersize=0.5)
+plot3v, = ax.plot([],[],[],'ro', markersize=0.5)
+plot3h, = ax.plot([],[],[],'go', markersize=0.5)
 
 X = []
 Y = []
@@ -341,29 +359,34 @@ Zh = []
 positions = [0,0,0]
 epoch = calcJD(calcJDN_GC(2000,1,1),12,0,0)
 
-for i in range(0,365,1):
-    earth = Body("Earth", Earth["mass"], Earth["radius"])
-    venus = Body("Venus", Venus["mass"], Venus["radius"])
-    halley1p = Body("Halley's Comet", 5e6, 5.5)
 
-    earth.loadKeplarian(1.496534962730336e8, # a
-              1.711862905357640e-2, # e
-              4.181344269688850e-4, # i
-              1.350829426264774e2, # Ω
-              3.267259945200456e2, # ω
-              epoch + i) # t
-    venus.loadKeplarian(1.082081681708332e8, # a
-              6.755786250503024e-3, # e
-              3.394589648659516, # i
-              7.667837463924961e1, # Ω
-              5.518596653686583e1, # ω
-              epoch + i) # t
-    halley1p.loadKeplarian(2.681019359492625e9, # a
-              9.672701666828314e-1, # e
-              1.621960405866950e2, # i
-              5.950786974713448e1, # Ω
-              1.124496743913674e2, # ω
-              epoch + i) # t
+earth = Body("Earth", Earth["mass"], Earth["radius"])
+venus = Body("Venus", Venus["mass"], Venus["radius"])
+halley1p = Body("Halley's Comet", 5e6, 5.5)
+
+
+
+
+def update(y):
+    y = y
+    earth.loadKeplerian(1.496534962730336e8, # a
+        1.711862905357640e-2, # e
+        4.181344269688850e-4, # i
+        1.350829426264774e2, # Ω
+        3.267259945200456e2, # ω
+        epoch + y) # t
+    venus.loadKeplerian(1.082081681708332e8, # a
+        6.755786250503024e-3, # e
+        3.394589648659516, # i
+        7.667837463924961e1, # Ω
+        5.518596653686583e1, # ω
+        epoch + y) # t
+    halley1p.loadKeplerian(2.681019359492625e9, # a
+        9.672701666828314e-1, # e
+        1.621960405866950e2, # i
+        5.950786974713448e1, # Ω
+        1.124496743913674e2, # ω
+        epoch + y) # t
     earth.calcMeanAnomalyFromEpoch()
     venus.calcMeanAnomalyFromEpoch()
     halley1p.calcMeanAnomalyFromEpoch()
@@ -385,12 +408,20 @@ for i in range(0,365,1):
     Xh.append(halley1p.position.x)
     Yh.append(halley1p.position.y)
     Zh.append(halley1p.position.z)
-plt.plot(X, Y, Z)
-plt.plot(Xv, Yv, Zv)
-plt.plot(Xh, Yh, Zh)
-plt.plot([0],[0],[0],'yo')
-plt.plot(Xint,Yint,Zint,'bo')
-plt.quiver(Xint,Yint, Zint,Xvint,Yvint, Zvint, length=2e6, color='red')
-plt.axis([-1.5e11,1.5e11,-1.5e11,1.5e11])
-ax.set_zlim(-1.5e11,1.5e11)
+    plt.axis([-1.5e11,1.5e11,-1.5e11,1.5e11])
+    ax.set_zlim(-1.5e11,1.5e11)
+    ax.figure.canvas.draw()
+    plot3.set_data_3d(X,Y,Z)
+    plot3v.set_data_3d(Xv,Yv,Zv)
+    plot3h.set_data_3d(Xh,Yh,Zh)
+
+
+animation = ani.FuncAnimation(fig, update, interval=1)
+#plt.plot(X, Y, Z)
+#plt.plot(Xv, Yv, Zv)
+#plt.plot(Xh, Yh, Zh)
+#plt.plot([0],[0],[0],'yo')
+#plt.plot(Xint,Yint,Zint,'bo')
+#plt.quiver(Xint,Yint, Zint,Xvint,Yvint, Zvint, length=2e6, color='red')
+
 plt.show()
