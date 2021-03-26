@@ -164,16 +164,31 @@ $ v = 2 \cdot \atantwo(\sqrt{1+\varepsilon} \sin{\frac{E}{2}}, \sqrt{1-\varepsil
 
 \section{Keplerian elements to state vectors}
 
+Transforming the Keplerian elements to state vectors is relatively easy, it requires three rotations in the z, x and z axes, the first rotation is the argument of periapsis $\omega$, the second is inclination $i$ and the final rotation is longitude of the ascending node $\Omega$, the same rotations are also applied to the velocity vector.
+
 $ r = a \frac{1-\varepsilon^2}{1+\varepsilon \cos{v}} $
+
+$ r_p = \frac{\sqrt{\mu a}}{r} $
 
 $ \begin{bmatrix}
 	x \\
 	y \\
 	z
-\end{bmatrix}
+\end{bmatrix} = 
 \begin{bmatrix}
 	r \cos{v} \\
 	r \sin{v} \\
+	0
+\end{bmatrix}$
+
+$ \begin{bmatrix}
+	\dot{x} \\
+	\dot{y} \\
+	\dot{z}
+\end{bmatrix} =
+\begin{bmatrix}
+	r_p -(\sin{E}) \\
+	r_p \sqrt{1-\varepsilon^2} \cos{E} \\
 	0
 \end{bmatrix}$
 
@@ -204,6 +219,36 @@ $\begin{bmatrix}
 	z
 \end{bmatrix}$
 
+$\begin{bmatrix}
+	\dot{x}' \\
+	\dot{y}' \\
+	\dot{z}'
+\end{bmatrix}
+=
+\begin{bmatrix}
+	\cos\Omega & -\sin\Omega  & 0 \\
+	\sin\Omega & \cos\Omega  & 0  \\
+	0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+	1 & 0  & 0 \\
+	0 & \cos i  & -\sin i  \\
+	0 & \sin i & \cos i
+\end{bmatrix}
+\begin{bmatrix}
+	\cos\omega & -\sin\omega  & 0 \\
+	\sin\omega & \cos\omega  & 0  \\
+	0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+	\dot{x} \\
+	\dot{y} \\
+	\dot{z}
+\end{bmatrix} $
+
+$r = R_z(-\Omega) R_x(-i) R_Z(-\omega)o$
+
+$\dot{r} = R_z(-\Omega) R_x(-i) R_Z(-\omega)\dot{o}$
 
 
 \end{document}
