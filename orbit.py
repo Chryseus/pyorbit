@@ -217,17 +217,19 @@ class Body:
         r = self.a * ((1-self.e**2) / (1+self.e * math.cos(v)))
 
         # Convert to rectangular
-        rx = r * math.cos(v)
-        ry = r * math.sin(v)
-        rz = 0
+        x = r * math.cos(v)
+        y = r * math.sin(v)
+        z = 0
 
         rp = math.sqrt(self.μ*self.a) / r
-        rxd = rp * -(math.sin(E))
-        ryd = rp * math.sqrt(1-self.e**2) * math.cos(E)
-        rzd = 0
+        xd = rp * -(math.sin(E))
+        yd = rp * math.sqrt(1-self.e**2) * math.cos(E)
+        zd = 0
 
-        #o = numpy.array([[x],[y],[z]])
+        o = numpy.array([[x],[y],[z]])
+        odot = numpy.array([[xd],[yd],[zd]])
         
+        '''
         # Position
         x = rx * (math.cos(ω) * math.cos(Ω) - math.sin(ω) * math.cos(inc) * math.sin(Ω)) - ry * (math.sin(ω) * math.cos(Ω) + math.cos(ω) * math.cos(inc) * math.sin(Ω))
         y = rx * (math.cos(ω) * math.sin(Ω) + math.sin(ω) * math.cos(inc) * math.cos(Ω)) + ry * (math.cos(ω) * math.cos(inc) * math.cos(Ω) - math.sin(ω) * math.sin(Ω))
@@ -236,15 +238,15 @@ class Body:
         # Velocity
         xdot = rxd * (math.cos(ω) * math.cos(Ω) - math.sin(ω) * math.cos(inc) * math.sin(Ω)) - ryd * (math.sin(ω) * math.cos(Ω) + math.cos(ω) * math.cos(inc) * math.sin(Ω))
         ydot = rxd * (math.cos(ω) * math.sin(Ω) + math.sin(ω) * math.cos(inc) * math.cos(Ω)) + ryd * (math.cos(ω) * math.cos(inc) * math.cos(Ω) - math.sin(ω) * math.sin(Ω))
-        zdot = rxd * (math.sin(ω) * math.sin(inc)) + ryd * (math.cos(ω) * math.sin(inc))
+        zdot = rxd * (math.sin(ω) * math.sin(inc)) + ryd * (math.cos(ω) * math.sin(inc))'''
         
 
-        '''R3 = numpy.array([[ math.cos(Ω), -math.sin(Ω), 0 ],
+        R3 = numpy.array([[ math.cos(Ω), -math.sin(Ω), 0 ],
                         [ math.sin(Ω), math.cos(Ω), 0 ],
                         [ 0, 0, 1 ]])
-        old R2 = numpy.array([[ math.cos(inc), 0, -math.sin(inc) ],
+        '''old R2 = numpy.array([[ math.cos(inc), 0, -math.sin(inc) ],
                         [ 0, 1, 0 ],
-                        [ math.sin(inc), 0, math.cos(inc) ]])   
+                        [ math.sin(inc), 0, math.cos(inc) ]])   '''
         R2 = numpy.array([[ 1, 0, 0 ],
                         [ 0, math.cos(inc), -math.sin(inc) ],
                         [ 0, math.sin(inc), math.cos(inc) ]])                
@@ -258,14 +260,15 @@ class Body:
 
         self.position.x = Rsum3[0,0]
         self.position.y = Rsum3[1,0]
-        self.position.z = Rsum3[2,0]'''
+        self.position.z = Rsum3[2,0]
 
-        self.position.x = x
-        self.position.y = y
-        self.position.z = z
-        self.velocity.x = xdot
-        self.velocity.y = ydot
-        self.velocity.z = zdot
+        Rsum = numpy.matmul(R1, odot)
+        Rsum2 = numpy.matmul(R2, Rsum)
+        Rsum3 = numpy.matmul(R3, Rsum2)
+
+        self.velocity.x = Rsum3[0,0]
+        self.velocity.y = Rsum3[1,0]
+        self.velocity.z = Rsum3[2,0]
 
         return 0
     def StateVectorsToKeplarian(self):
