@@ -11,7 +11,6 @@ import matplotlib.animation as ani
 
 G: float = 6.67430e-11 # gravitational constant m3 kg-1 s-2 
 epoch = 2451545.0 # J2000 epoch - 1 January 2000 - 12:00:00 UTC
-M0 = 3.586172562406391e2
 
 Sun = {"μ": 1.32712440018e20,
        "mass": 1.9885e30,
@@ -135,8 +134,8 @@ class Body:
         self.radius = radius
         self.μ = μ
 
-    def loadKeplerian(self,a,e,i,Ω,ω,t=epoch,M=0,v=0,E=0):
-        "Load available Keplerian elements"
+    def loadKeplerian(self,a,e,i,Ω,ω,M0=0,t=epoch,M=0,v=0,E=0):
+        "Load Keplerian elements a, e, i, Ω, ω and JD time t since epoch"
         self.a = a*1000 # Semi-major axis - km (convert to meters)
         self.e = e # Eccentricity
         self.i = i # Inclination - degrees
@@ -144,39 +143,41 @@ class Body:
         self.ω = ω # Argument of Periapsis - degrees
         self.t = t # time from epoch - JD
         self.M = M # Mean Anomaly - degrees
+        self.M0 = M0 # Mean Anomaly at epoch - degrees
         self.v = v # True Anomaly - degrees
         self.E = E # Eccentric Anomaly - degrees
         return 0
 
     def loadStateVectors(self, position, velocity):
+        # TODO
         return 0
 
     def calcPericenter(self):
-        "Calculate the pericentre distance in meters"
+        "Calculate the pericentre distance PeC in meters"
         self.PeC = (1 - self.e) * (self.a)
         return self.PeC
     def calcApocenter(self):
-        "Calculate the apocentre distance in meters"
+        "Calculate the apocentre ApC distance in meters"
         self.ApC = (1 + self.e) * (self.a)
         return self.ApC
     def calcApoapsis(self):
-        "Calculate the apoapsis in meters"
+        "Calculate the apoapsis ApA in meters"
         self.ApA = self.calcApocenter() - (Sun["radius"]*1000)
         return self.ApA
     def calcPeriapsis(self):
-        "Calculate periapsis in meters"
+        "Calculate periapsis PeA in meters"
         self.PeA = self.calcPericenter() - (Sun["radius"]*1000)
         return self.PeA
 
 
     def getMeanMotion(self):
-        "Calculate mean motion in degrees per second"
+        "Calculate mean motion n in degrees per second"
         self.n = math.degrees(math.sqrt(self.μ/self.a**3))
         return self.n
 
     def calcMeanAnomalyFromEpoch(self):
-        "Calculate mean anomaly since the epoch"
-        self.M = M0 + self.getMeanMotion() * JDDeltaTimeSeconds(self.t,epoch)
+        "Calculate mean anomaly M since the epoch and JD time t"
+        self.M = self.M0 + self.getMeanMotion() * JDDeltaTimeSeconds(self.t,epoch)
         if self.M < 0:
             self.M = self.M % 360
         if self.M > 360:
@@ -184,12 +185,13 @@ class Body:
         return self.M
 
     def calcEccentricAnomaly(self):
-        "Calculate eccentric anomaly from mean anomaly"
+        "Calculate eccentric anomaly from mean anomaly M"
+        # TODO add a tidy way for the user to set tolerance
         self.E = calcEccentricAnomalyNewton(self.M, self.e, 1e-15)
         return self.E
     
     def calcTrueAnomaly(self):
-        "Calculate true anomaly from eccentric anomaly"
+        "Calculate true anomaly from eccentric anomaly E"
         E = math.radians(self.E)
         e = self.e
         #v = 2 * math.atan(math.sqrt((1+e)/(1-e)) * math.tan(E/2))
@@ -197,30 +199,31 @@ class Body:
         self.v = math.degrees(v)
         return v
     def calcAngularMomentum(self):
+        "Calculates the angular momentum h"
+        # TODO Check equation is correct
         self.h = math.sqrt(self.μ * self.a * (1 - self.e**2))
         #self.h = self.mass * self.calcVelocityPeriapsis() * self.calcPericenter()
         return self.h
     def calcVelocityPeriapsis(self):
         "Calculate velocity at periapsis"
-        t_a = self.a # m
-        self.vp = math.sqrt(((1+self.e) * self.μ) / ((1-self.e) * t_a))
+        self.vp = math.sqrt(((1+self.e) * self.μ) / ((1-self.e) * self.a))
         return self.vp
     def calcVelocityApoapsis(self):
-        "Calculate velocity at apoapsis"
-        t_a = self.a # m
-        self.va = math.sqrt(((1-self.e) * self.μ) / ((1+self.e) * t_a))
+        "Calculate velocity at apoapsis va"
+        self.va = math.sqrt(((1-self.e) * self.μ) / ((1+self.e) * self.a))
         return self.va
     def calcVelocityMean(self):
+        "Calculates the mean velocity vm"
         self.vm = math.sqrt(self.μ / self.a) # m/s
         return self.vm
     def calcPeriod(self):
+        "Calculates the orbital period p in seconds"
         self.p = 2 * math.pi * math.sqrt(self.a**3 / self.μ)
         return self.p
     def keplerianToStateVectors(self):
+        "Converts Keplerian elements to state vectors"
         self.position = vec3(0,0,0)
         self.velocity = vec3(0,0,0)
-        self.calcAngularMomentum()
-        self.calcPeriod()
         
         # Convert to radians
         E = math.radians(self.E)
@@ -228,14 +231,14 @@ class Body:
         ω = math.radians(self.ω)
         inc = math.radians(self.i)
         v = math.radians(self.v)
-        #r = self.a * (1-self.e) * math.cos(E)
+
         r = self.a * ((1-self.e**2) / (1+self.e * math.cos(v)))
 
-        # Convert to rectangular
+        # Convert to rectangular coordinates
         x = r * math.cos(v)
         y = r * math.sin(v)
         z = 0
-
+        # Local velocity vector
         rp = math.sqrt(self.μ*self.a) / r
         xd = rp * -(math.sin(E))
         yd = rp * math.sqrt(1-self.e**2) * math.cos(E)
@@ -244,31 +247,17 @@ class Body:
         o = numpy.array([[x],[y],[z]])
         odot = numpy.array([[xd],[yd],[zd]])
         
-        '''
-        # Position
-        x = rx * (math.cos(ω) * math.cos(Ω) - math.sin(ω) * math.cos(inc) * math.sin(Ω)) - ry * (math.sin(ω) * math.cos(Ω) + math.cos(ω) * math.cos(inc) * math.sin(Ω))
-        y = rx * (math.cos(ω) * math.sin(Ω) + math.sin(ω) * math.cos(inc) * math.cos(Ω)) + ry * (math.cos(ω) * math.cos(inc) * math.cos(Ω) - math.sin(ω) * math.sin(Ω))
-        z = rx * (math.sin(ω) * math.sin(inc)) + ry * (math.cos(ω) * math.sin(inc))
-
-        # Velocity
-        xdot = rxd * (math.cos(ω) * math.cos(Ω) - math.sin(ω) * math.cos(inc) * math.sin(Ω)) - ryd * (math.sin(ω) * math.cos(Ω) + math.cos(ω) * math.cos(inc) * math.sin(Ω))
-        ydot = rxd * (math.cos(ω) * math.sin(Ω) + math.sin(ω) * math.cos(inc) * math.cos(Ω)) + ryd * (math.cos(ω) * math.cos(inc) * math.cos(Ω) - math.sin(ω) * math.sin(Ω))
-        zdot = rxd * (math.sin(ω) * math.sin(inc)) + ryd * (math.cos(ω) * math.sin(inc))'''
-        
-
+        # Matrices
         R3 = numpy.array([[ math.cos(Ω), -math.sin(Ω), 0 ],
                         [ math.sin(Ω), math.cos(Ω), 0 ],
                         [ 0, 0, 1 ]])
-        '''old R2 = numpy.array([[ math.cos(inc), 0, -math.sin(inc) ],
-                        [ 0, 1, 0 ],
-                        [ math.sin(inc), 0, math.cos(inc) ]])   '''
         R2 = numpy.array([[ 1, 0, 0 ],
                         [ 0, math.cos(inc), -math.sin(inc) ],
                         [ 0, math.sin(inc), math.cos(inc) ]])                
         R1 = numpy.array([[ math.cos(ω), -math.sin(ω), 0 ],
                         [ math.sin(ω), math.cos(ω), 0 ],
                         [ 0, 0, 1 ]])
-       
+        # Matrix multiplication
         Rsum = numpy.matmul(R1, o)
         Rsum2 = numpy.matmul(R2, Rsum)
         Rsum3 = numpy.matmul(R3, Rsum2)
@@ -289,17 +278,93 @@ class Body:
     def StateVectorsToKeplerian(self):
         return 0
 
-        
-earth = Body("Earth", Earth["mass"], Earth["radius"])
-earth.loadKeplerian(1.496534962730336e8, # a
-              1.711862905357640e-2, # e
-              4.181344269688850e-4, # i
-              1.350829426264774e2, # Ω
-              3.267259945200456e2, # ω
-              calcJD(calcJDN_GC(2000,1,1),12,0,0)) # t
+def getOrbitData(body, points):
+    "Helper function to get position and velocity data for a body over one complete orbit"
+    # TODO better data packing
+    positions = []
+    velocities = []
+    body.M = 0
+    step = 360/(points)
+    for i in range(0,points+1):
+        body.M = i*step
+        body.calcEccentricAnomaly()
+        body.calcTrueAnomaly()
+        body.keplerianToStateVectors()
+        p = [body.position.x, body.position.y, body.position.z]
+        v = [body.velocity.x, body.velocity.y, body.velocity.z]
+        positions.append(p)
+        velocities.append(v)
+    return positions, velocities
 
+def getPVatDate(body, JD):
+    body.t = JD
+    body.calcMeanAnomalyFromEpoch()
+    body.calcEccentricAnomaly()
+    body.calcTrueAnomaly()
+    body.keplerianToStateVectors()
+    return body.position.x, body.position.y, body.position.z, body.velocity.x, body.velocity.y, body.velocity.z
+
+def unpackData(data):
+    X = []
+    Y = []
+    Z = []
+    for i in range(0,len(data)):
+        X.append(data[i][0])
+        Y.append(data[i][1])
+        Z.append(data[i][2])
+    return X, Y, Z
+
+def plotBody(body, points, JD):
+    p, v = getOrbitData(body,points)
+    X, Y, Z = unpackData(p)
+    Xd, Yd, Zd = unpackData(v)
+    plt.plot(X,Y,Z)
+    Xi, Yi, Zi, Xiv, Yiv, Ziv = getPVatDate(body,JD)
+    plt.plot(Xi,Yi,Zi,'bo')
+    plt.quiver(Xi,Yi,Zi,Xiv,Yiv,Ziv, length=2e6, color='red')
+    print(f"Body {body.name} Velocity {Xiv/1000} {Yiv/1000} {Ziv/1000}")
+    print(f"Velp {body.calcVelocityPeriapsis()/1000}")
+       
 os.system("cls")
+earth = Body("Earth", Earth["mass"], Earth["radius"])
+venus = Body("Venus", Venus["mass"], Venus["radius"])
+halley1p = Body("Halley's Comet", 5e6, 5.5)
+
+earth.loadKeplerian(1.496534962730336e8, # a
+    1.711862905357640e-2, # e
+    4.181344269688850e-4, # i
+    1.350829426264774e2, # Ω
+    3.267259945200456e2, # ω
+    3.586172562406391e2) # M0
+venus.loadKeplerian(1.082081681708332e8, # a
+    6.755786250503024e-3, # e
+    3.394589648659516, # i
+    7.667837463924961e1, # Ω
+    5.518596653686583e1, # ω
+    5.011477187351476) # M0
+halley1p.loadKeplerian(2.681019359492625e9, # a
+    9.672701666828314e-1, # e
+    1.621960405866950e2, # i
+    5.950786974713448e1, # Ω
+    1.124496743913674e2, # ω
+    6.584890009095817e1) # M0
+
+
+
+time = calcJD(calcJDN_GC(2021,3,27),12,0,0)
+
+fig = plt.figure()
+ax = plt.axes(projection = '3d')
+plt.axis([-1.5e11,1.5e11,-1.5e11,1.5e11])
+ax.set_zlim(-1.5e11,1.5e11)
+plotBody(earth, 100, time)
+plotBody(venus, 100, time)
+plotBody(halley1p, 2000, time)
+plt.show()
+
 print (f"Epoch J2000 (JD {epoch}")
+"""
+
 print ("Julian date: " + str(calcJD(calcJDN_GC(2000,2,1),12,0,0)))
 print("Semi-major axis: " + format(earth.a,'1e') + " km")
 print("Orbit: " + format(earth.calcApocenter()/1000,'3e') + " x " + format(earth.calcPericenter()/1000,'3e') + " (" + format(earth.calcApoapsis()/1000,'3e') + " x " + format(earth.calcPeriapsis()/1000,'3e') + ") km")
@@ -361,8 +426,7 @@ epoch = calcJD(calcJDN_GC(2000,1,1),12,0,0)
 
 
 earth = Body("Earth", Earth["mass"], Earth["radius"])
-venus = Body("Venus", Venus["mass"], Venus["radius"])
-halley1p = Body("Halley's Comet", 5e6, 5.5)
+
 
 
 
@@ -375,18 +439,7 @@ def update(y):
         1.350829426264774e2, # Ω
         3.267259945200456e2, # ω
         epoch + y) # t
-    venus.loadKeplerian(1.082081681708332e8, # a
-        6.755786250503024e-3, # e
-        3.394589648659516, # i
-        7.667837463924961e1, # Ω
-        5.518596653686583e1, # ω
-        epoch + y) # t
-    halley1p.loadKeplerian(2.681019359492625e9, # a
-        9.672701666828314e-1, # e
-        1.621960405866950e2, # i
-        5.950786974713448e1, # Ω
-        1.124496743913674e2, # ω
-        epoch + y) # t
+
     earth.calcMeanAnomalyFromEpoch()
     venus.calcMeanAnomalyFromEpoch()
     halley1p.calcMeanAnomalyFromEpoch()
@@ -425,3 +478,4 @@ animation = ani.FuncAnimation(fig, update, interval=1)
 #plt.quiver(Xint,Yint, Zint,Xvint,Yvint, Zvint, length=2e6, color='red')
 
 plt.show()
+"""
