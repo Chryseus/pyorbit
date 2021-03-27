@@ -10,3 +10,6 @@ Python Orbital Simulator
 * Preparation for n-body simulation
 * Import of NASA JPL Horizons data :heavy_check_mark:
 * Easy to use API
+
+### Example output
+![preview](https://i.imgur.com/kKhWLBt.png)
