@@ -1,0 +1,99 @@
+*******************************************************************************
+ Revised: July 31, 2013                  Earth                              399
+ 
+ GEOPHYSICAL PROPERTIES (revised Aug 15, 2018):
+  Vol. Mean Radius (km)    = 6371.01+-0.02   Mass x10^24 (kg)= 5.97219+-0.0006
+  Equ. radius, km          = 6378.137        Mass layers:
+  Polar axis, km           = 6356.752          Atmos         = 5.1   x 10^18 kg
+  Flattening               = 1/298.257223563   oceans        = 1.4   x 10^21 kg
+  Density, g/cm^3          = 5.51              crust         = 2.6   x 10^22 kg
+  J2 (IERS 2010)           = 0.00108262545     mantle        = 4.043 x 10^24 kg
+  g_p, m/s^2  (polar)      = 9.8321863685      outer core    = 1.835 x 10^24 kg
+  g_e, m/s^2  (equatorial) = 9.7803267715      inner core    = 9.675 x 10^22 kg
+  g_o, m/s^2               = 9.82022         Fluid core rad  = 3480 km
+  GM, km^3/s^2             = 398600.435436   Inner core rad  = 1215 km
+  GM 1-sigma, km^3/s^2     =      0.0014     Escape velocity = 11.186 km/s
+  Rot. Rate (rad/s)        = 0.00007292115   Surface area:
+  Mean sidereal day, hr    = 23.9344695944     land          = 1.48 x 10^8 km
+  Mean solar day 2000.0, s = 86400.002         sea           = 3.62 x 10^8 km
+  Mean solar day 1820.0, s = 86400.0         Love no., k2    = 0.299
+  Moment of inertia        = 0.3308          Atm. pressure   = 1.0 bar
+  Mean temperature, K      = 270             Volume, km^3    = 1.08321 x 10^12
+  Mean effect. IR temp, K  = 255             Magnetic moment = 0.61 gauss Rp^3
+  Geometric albedo         = 0.367           Vis. mag. V(1,0)= -3.86
+  Solar Constant (W/m^2)   = 1367.6 (mean), 1414 (perihelion), 1322 (aphelion)
+ HELIOCENTRIC ORBIT CHARACTERISTICS:
+  Obliquity to orbit, deg  = 23.4392911  Sidereal orb period  = 1.0000174 y
+  Orbital speed, km/s      = 29.79       Sidereal orb period  = 365.25636 d
+  Mean daily motion, deg/d = 0.9856474   Hill's sphere radius = 234.9       
+*******************************************************************************
+ 
+ 
+*******************************************************************************
+Ephemeris / WWW_USER Sat Mar 27 06:12:46 2021 Pasadena, USA      / Horizons
+*******************************************************************************
+Target body name: Earth (399)                     {source: DE431mx}
+Center body name: Sun (10)                        {source: DE431mx}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 2000-Jan-01 12:00:00.0000 TDB
+Stop  time      : A.D. 2000-Jan-02 00:00:00.0000 TDB
+Step-size       : 1440 minutes
+*******************************************************************************
+Center geodetic : 0.00000000,0.00000000,0.0000000 {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.00000000,0.00000000,0.0000000 {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : 696000.0 x 696000.0 x 696000.0 k{Equator, meridian, pole}    
+Keplerian GM    : 1.3271283864237474E+11 km^3/s^2
+Output units    : KM-S, deg, Julian Day Number (Tp)
+Output type     : GEOMETRIC osculating elements
+Output format   : 10
+Reference frame : Ecliptic of J2000.0
+*******************************************************************************
+            JDTDB,            Calendar Date (TDB),                     EC,                     QR,                     IN,                     OM,                      W,                     Tp,                      N,                     MA,                     TA,                      A,                     AD,                     PR,
+**************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+$$SOE
+2451545.000000000, A.D. 2000-Jan-01 12:00:00.0000,  1.711862905357640E-02,  1.471029546855777E+08,  4.181344269688850E-04,  1.350829426264774E+02,  3.267259945200456E+02,  2.451546403877783E+06,  1.139983756907320E-05,  3.586172562406391E+02,  3.585688856522561E+02,  1.496650145519913E+08,  1.522270744184050E+08,  3.157939732199778E+07,
+$$EOE
+**************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+Coordinate system description:
+
+  Ecliptic at the standard reference epoch
+
+    Reference epoch: J2000.0
+    X-Y plane: adopted Earth orbital plane at the reference epoch
+               Note: obliquity of 84381.448 arcseconds (IAU76) wrt ICRF equator
+    X-axis   : ICRF
+    Z-axis   : perpendicular to the X-Y plane in the directional (+ or -) sense
+               of Earth's north pole at the reference epoch.
+
+  Symbol meaning:
+
+    JDTDB    Julian Day Number, Barycentric Dynamical Time
+      EC     Eccentricity, e
+      QR     Periapsis distance, q (km)
+      IN     Inclination w.r.t X-Y plane, i (degrees)
+      OM     Longitude of Ascending Node, OMEGA, (degrees)
+      W      Argument of Perifocus, w (degrees)
+      Tp     Time of periapsis (Julian Day Number)
+      N      Mean motion, n (degrees/sec)
+      MA     Mean anomaly, M (degrees)
+      TA     True anomaly, nu (degrees)
+      A      Semi-major axis, a (km)
+      AD     Apoapsis distance (km)
+      PR     Sidereal orbit period (sec)
+
+Geometric states/elements have no aberrations applied.
+
+
+ Computations by ...
+     Solar System Dynamics Group, Horizons On-Line Ephemeris System
+     4800 Oak Grove Drive, Jet Propulsion Laboratory
+     Pasadena, CA  91109   USA
+     Information  : https://ssd.jpl.nasa.gov/
+     Documentation: https://ssd.jpl.nasa.gov/?horizons_doc
+     Connect      : https://ssd.jpl.nasa.gov/?horizons (browser)
+                    telnet ssd.jpl.nasa.gov 6775       (command-line)
+                    e-mail command interface available
+                    Script and CGI interfaces available
+     Author       : Jon.D.Giorgini@jpl.nasa.gov
+*******************************************************************************

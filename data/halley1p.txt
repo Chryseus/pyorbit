@@ -1,0 +1,115 @@
+*******************************************************************************
+JPL/HORIZONS                      1P/Halley                2021-Mar-27 06:14:06
+Rec #:90000033        Soln.date: 2001-Aug-02_13:51:39   # obs: 7428 (1835-1994)
+ 
+IAU76/J2000 helio. ecliptic osc. elements (au, days, deg., period=Julian yrs):
+ 
+  EPOCH=  2449400.5 ! 1994-Feb-17.0000000 (TDB)    RMSW= n.a.
+   EC= .9671429084623044   QR= .5859781115169086   TP= 2446467.3953170511
+   OM= 58.42008097656843   W= 111.3324851045177    IN= 162.2626905791606
+   A= 17.83414429255373    MA= 38.38426447643637   ADIST= 35.08231047359055
+   PER= 75.315892782197    N= .013086564           ANGMOM= .01846886
+   DAN= 1.77839            DDN= .8527              L= 306.1250589
+   B= 16.4859355           MOID= .0637815          TP= 1986-Feb-05.8953170511
+ 
+Comet physical (GM= km^3/s^2; RAD= km):
+   GM= n.a.                RAD= 5.5
+   M1=  5.5      M2=  13.6     k1=  8.     k2=  5.      PHCOF=  .030
+ 
+Comet non-gravitational force model (AMRAT=m^2/kg;A1-A3=au/d^2;DT=days;R0=au):
+   AMRAT=  0.                                      DT=  0.
+   A1= 2.69646383822E-10   A2= 1.554613374174E-10  A3= 0.
+ Standard model:
+   ALN=  .1112620426   NK=  4.6142   NM=  2.15     NN=  5.093    R0=  2.808
+ 
+COMET comments 
+1: soln ref.= JPL#J863/77, data arc: 1835-08-21 to 1994-01-11
+2: k1=8.0, k2=5.0, phase coef.=0.03;
+*******************************************************************************
+ 
+ 
+*******************************************************************************
+Ephemeris / WWW_USER Sat Mar 27 06:14:06 2021 Pasadena, USA      / Horizons
+*******************************************************************************
+Target body name: 1P/Halley                       {source: JPL#J863/77}
+Center body name: Sun (10)                        {source: DE406}
+Center-site name: BODY CENTER
+*******************************************************************************
+Start time      : A.D. 2000-Jan-01 12:00:00.0000 TDB
+Stop  time      : A.D. 2000-Jan-02 00:00:00.0000 TDB
+Step-size       : 1440 minutes
+*******************************************************************************
+Center geodetic : 0.00000000,0.00000000,0.0000000 {E-lon(deg),Lat(deg),Alt(km)}
+Center cylindric: 0.00000000,0.00000000,0.0000000 {E-lon(deg),Dxy(km),Dz(km)}
+Center radii    : 696000.0 x 696000.0 x 696000.0 k{Equator, meridian, pole}    
+Keplerian GM    : 1.3271244001798691E+11 km^3/s^2
+Small perturbers: Yes                             {source: SB406-CPV-2}
+Output units    : KM-S, deg, Julian Day Number (Tp)
+Output type     : GEOMETRIC osculating elements
+Output format   : 10
+Reference frame : Ecliptic of J2000.0
+*******************************************************************************
+Initial IAU76/J2000 heliocentric ecliptic osculating elements (au, days, deg.):
+  EPOCH=  2449400.5 ! 1994-Feb-17.0000000 (TDB)    RMSW= n.a.                  
+   EC= .9671429084623044   QR= .5859781115169086   TP= 2446467.3953170511      
+   OM= 58.42008097656843   W= 111.3324851045177    IN= 162.2626905791606       
+  Equivalent ICRF heliocentric cartesian coordinates (au, au/d):
+   X=-1.394097492221407E+01  Y= 1.280566418073994E+01  Z=-6.838705058662126E-01
+  VX=-2.114527120886761E-03 VY= 3.184092376402889E-03 VZ= 2.042731155152628E-04
+Comet physical (GM= km^3/s^2; RAD= km):                                        
+   GM= n.a.                RAD= 5.5                                            
+   M1=  5.5      M2=  13.6     k1=  8.     k2=  5.      PHCOF=  .030           
+Comet non-gravitational force model (AMRAT=m^2/kg;A1-A3=au/d^2;DT=days;R0=au): 
+   AMRAT=  0.                                      DT=  0.                     
+   A1= 2.69646383822E-10   A2= 1.554613374174E-10  A3= 0.                      
+ Standard model:                                                               
+   ALN=  .1112620426   NK=  4.6142   NM=  2.15     NN=  5.093    R0=  2.808    
+*******************************************************************************
+            JDTDB,            Calendar Date (TDB),                     EC,                     QR,                     IN,                     OM,                      W,                     Tp,                      N,                     MA,                     TA,                      A,                     AD,                     PR,
+**************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+$$SOE
+2451545.000000000, A.D. 2000-Jan-01 12:00:00.0000,  9.672701666828314E-01,  8.774931675629592E+07,  1.621960405866950E+02,  5.950786974713448E+01,  1.124496743913674E+02,  2.446476187130885E+06,  1.503586869408572E-07,  6.584890009095817E+01,  1.707413791587093E+02,  2.681019359492625E+09,  5.274289402228954E+09,  2.394274699549645E+09,
+$$EOE
+**************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+Coordinate system description:
+
+  Ecliptic at the standard reference epoch
+
+    Reference epoch: J2000.0
+    X-Y plane: adopted Earth orbital plane at the reference epoch
+               Note: obliquity of 84381.448 arcseconds (IAU76) wrt ICRF equator
+    X-axis   : ICRF
+    Z-axis   : perpendicular to the X-Y plane in the directional (+ or -) sense
+               of Earth's north pole at the reference epoch.
+
+  Symbol meaning:
+
+    JDTDB    Julian Day Number, Barycentric Dynamical Time
+      EC     Eccentricity, e
+      QR     Periapsis distance, q (km)
+      IN     Inclination w.r.t X-Y plane, i (degrees)
+      OM     Longitude of Ascending Node, OMEGA, (degrees)
+      W      Argument of Perifocus, w (degrees)
+      Tp     Time of periapsis (Julian Day Number)
+      N      Mean motion, n (degrees/sec)
+      MA     Mean anomaly, M (degrees)
+      TA     True anomaly, nu (degrees)
+      A      Semi-major axis, a (km)
+      AD     Apoapsis distance (km)
+      PR     Sidereal orbit period (sec)
+
+Geometric states/elements have no aberrations applied.
+
+
+ Computations by ...
+     Solar System Dynamics Group, Horizons On-Line Ephemeris System
+     4800 Oak Grove Drive, Jet Propulsion Laboratory
+     Pasadena, CA  91109   USA
+     Information  : https://ssd.jpl.nasa.gov/
+     Documentation: https://ssd.jpl.nasa.gov/?horizons_doc
+     Connect      : https://ssd.jpl.nasa.gov/?horizons (browser)
+                    telnet ssd.jpl.nasa.gov 6775       (command-line)
+                    e-mail command interface available
+                    Script and CGI interfaces available
+     Author       : Jon.D.Giorgini@jpl.nasa.gov
+*******************************************************************************

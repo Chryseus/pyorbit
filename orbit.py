@@ -1,6 +1,8 @@
 import math
 import numpy
 import os
+import re
+import csv
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 import matplotlib.animation as ani
@@ -134,6 +136,16 @@ class Body:
         self.radius = radius
         self.μ = μ
 
+    def getKeplerianDebug(self):
+        print(f"a = {self.a/1000} km")
+        print(f"e = {self.e}")
+        print(f"i = {self.i} degrees")
+        print(f"Ω = {self.Ω} degrees")
+        print(f"ω = {self.ω} degrees")
+        print(f"M0 = {self.M0} degrees")
+        print(f"E = {self.E} degrees")
+        print(f"v = {self.v} degrees")
+
     def loadKeplerian(self,a,e,i,Ω,ω,M0=0,t=epoch,M=0,v=0,E=0):
         "Load Keplerian elements a, e, i, Ω, ω and JD time t since epoch"
         self.a = a*1000 # Semi-major axis - km (convert to meters)
@@ -147,6 +159,22 @@ class Body:
         self.v = v # True Anomaly - degrees
         self.E = E # Eccentric Anomaly - degrees
         return 0
+
+    def loadKeplerianHorizons(self, file):
+        print(f"Loading Keplerian data for {self.name} from {file}")
+        with open(file,'r') as handle:
+            data = handle.read()
+        m = re.search('(?<=\$\$SOE)(.*?)(?=\$\$EOE)',data,re.DOTALL | re.MULTILINE)
+        string = m.group()
+        string = string.strip()
+        string = string.split(',')
+        e = float(string[2])
+        i = float(string[4])
+        Ω = float(string[5])
+        ω = float(string[6])
+        M0 = float(string[9])
+        a = float(string[11])
+        self.loadKeplerian(a,e,i,Ω,ω,M0)
 
     def loadStateVectors(self, position, velocity):
         # TODO
@@ -220,7 +248,7 @@ class Body:
         "Calculates the orbital period p in seconds"
         self.p = 2 * math.pi * math.sqrt(self.a**3 / self.μ)
         return self.p
-    def keplerianToStateVectors(self):
+    def keplerianToStateVectors(self, parent=None):
         "Converts Keplerian elements to state vectors"
         self.position = vec3(0,0,0)
         self.velocity = vec3(0,0,0)
@@ -262,9 +290,14 @@ class Body:
         Rsum2 = numpy.matmul(R2, Rsum)
         Rsum3 = numpy.matmul(R3, Rsum2)
 
-        self.position.x = Rsum3[0,0]
-        self.position.y = Rsum3[1,0]
-        self.position.z = Rsum3[2,0]
+        if(parent != None): # Move body centre to parent position
+            self.position.x = Rsum3[0,0] + parent.position.x
+            self.position.y = Rsum3[1,0] + parent.position.y
+            self.position.z = Rsum3[2,0] + parent.position.z
+        else:
+            self.position.x = Rsum3[0,0]
+            self.position.y = Rsum3[1,0]
+            self.position.z = Rsum3[2,0]
 
         Rsum = numpy.matmul(R1, odot)
         Rsum2 = numpy.matmul(R2, Rsum)
@@ -278,7 +311,7 @@ class Body:
     def StateVectorsToKeplerian(self):
         return 0
 
-def getOrbitData(body, points):
+def getOrbitData(body, points, parent=None):
     "Helper function to get position and velocity data for a body over one complete orbit"
     # TODO better data packing
     positions = []
@@ -289,19 +322,19 @@ def getOrbitData(body, points):
         body.M = i*step
         body.calcEccentricAnomaly()
         body.calcTrueAnomaly()
-        body.keplerianToStateVectors()
+        body.keplerianToStateVectors(parent)
         p = [body.position.x, body.position.y, body.position.z]
         v = [body.velocity.x, body.velocity.y, body.velocity.z]
         positions.append(p)
         velocities.append(v)
     return positions, velocities
 
-def getPVatDate(body, JD):
+def getPVatDate(body, JD, parent):
     body.t = JD
     body.calcMeanAnomalyFromEpoch()
     body.calcEccentricAnomaly()
     body.calcTrueAnomaly()
-    body.keplerianToStateVectors()
+    body.keplerianToStateVectors(parent)
     return body.position.x, body.position.y, body.position.z, body.velocity.x, body.velocity.y, body.velocity.z
 
 def unpackData(data):
@@ -314,168 +347,46 @@ def unpackData(data):
         Z.append(data[i][2])
     return X, Y, Z
 
-def plotBody(body, points, JD):
-    p, v = getOrbitData(body,points)
+def plotBody(body, points, JD, parent=None):
+    p, v = getOrbitData(body,points, parent)
     X, Y, Z = unpackData(p)
     Xd, Yd, Zd = unpackData(v)
     plt.plot(X,Y,Z)
-    Xi, Yi, Zi, Xiv, Yiv, Ziv = getPVatDate(body,JD)
+    Xi, Yi, Zi, Xiv, Yiv, Ziv = getPVatDate(body,JD, parent)
     plt.plot(Xi,Yi,Zi,'bo')
     plt.quiver(Xi,Yi,Zi,Xiv,Yiv,Ziv, length=2e6, color='red')
-    print(f"Body {body.name} Velocity {Xiv/1000} {Yiv/1000} {Ziv/1000}")
-    print(f"Velp {body.calcVelocityPeriapsis()/1000}")
-       
+
+
 os.system("cls")
 earth = Body("Earth", Earth["mass"], Earth["radius"])
+mercury = Body("Mercury", Mercury["mass"], Mercury["radius"])
 venus = Body("Venus", Venus["mass"], Venus["radius"])
+mars = Body("Mars", Mars["mass"], Mars["radius"])
 halley1p = Body("Halley's Comet", 5e6, 5.5)
+moon = Body("Moon",Moon["mass"],Moon["radius"])
 
-earth.loadKeplerian(1.496534962730336e8, # a
-    1.711862905357640e-2, # e
-    4.181344269688850e-4, # i
-    1.350829426264774e2, # Ω
-    3.267259945200456e2, # ω
-    3.586172562406391e2) # M0
-venus.loadKeplerian(1.082081681708332e8, # a
-    6.755786250503024e-3, # e
-    3.394589648659516, # i
-    7.667837463924961e1, # Ω
-    5.518596653686583e1, # ω
-    5.011477187351476) # M0
-halley1p.loadKeplerian(2.681019359492625e9, # a
-    9.672701666828314e-1, # e
-    1.621960405866950e2, # i
-    5.950786974713448e1, # Ω
-    1.124496743913674e2, # ω
-    6.584890009095817e1) # M0
-
-
+earth.loadKeplerianHorizons("data/earth.txt")
+mercury.loadKeplerianHorizons("data/mercury.txt")
+venus.loadKeplerianHorizons("data/venus.txt")
+mars.loadKeplerianHorizons("data/mars.txt")
+halley1p.loadKeplerianHorizons("data/halley1p.txt")
+moon.loadKeplerianHorizons("data/moon.txt")
+moon.μ = Earth["μ"]
 
 time = calcJD(calcJDN_GC(2021,3,27),12,0,0)
 
+
 fig = plt.figure()
 ax = plt.axes(projection = '3d')
-plt.axis([-1.5e11,1.5e11,-1.5e11,1.5e11])
+plt.axis([-2e11,2e11,-2e11,2e11])
 ax.set_zlim(-1.5e11,1.5e11)
 plotBody(earth, 100, time)
+plotBody(mercury, 50, time)
 plotBody(venus, 100, time)
+plotBody(mars, 100, time)
 plotBody(halley1p, 2000, time)
+plotBody(moon,100,time, earth)
+moon.getKeplerianDebug()
+plt.plot(0,0,0,'yo') # sun
 plt.show()
 
-print (f"Epoch J2000 (JD {epoch}")
-"""
-
-print ("Julian date: " + str(calcJD(calcJDN_GC(2000,2,1),12,0,0)))
-print("Semi-major axis: " + format(earth.a,'1e') + " km")
-print("Orbit: " + format(earth.calcApocenter()/1000,'3e') + " x " + format(earth.calcPericenter()/1000,'3e') + " (" + format(earth.calcApoapsis()/1000,'3e') + " x " + format(earth.calcPeriapsis()/1000,'3e') + ") km")
-print("Eccentricity: " + str(earth.e))
-print("Mean motion: " + str(earth.getMeanMotion()) + " degrees/s")
-print ("Orbital period: " + str(earth.calcPeriod()/(60*60*24)) + " days/year")
-print ("Mean Velocity: " + str(earth.calcVelocityMean()) + " m/s")
-print ("Velocity at apoapsis: " + str(earth.calcVelocityApoapsis()))
-print ("Velocity at periapsis: " + str(earth.calcVelocityPeriapsis()))
-print ("Mean Anomaly: " + str(earth.calcMeanAnomalyFromEpoch()) + " degrees")
-print ("Eccentric Anomaly: " + str(earth.calcEccentricAnomaly()) + " degrees")
-print ("True Anomaly: " + str(earth.calcTrueAnomaly()) + " degrees")
-earth.keplerianToStateVectors()
-print ("State Vectors")
-'''
-print ("X: " + format(earth.position.x,'1e'))
-print ("Y: " + format(earth.position.y,'1e'))
-print ("Z: " + format(earth.position.z,'1e'))
-print ("vX: " + format(earth.velocity.x,'1e'))
-print ("vY: " + format(earth.velocity.y,'1e'))
-print ("vZ: " + format(earth.velocity.z,'1e'))'''
-print("Position")
-print(f"X: {earth.position.x:e}")
-print(f"Y: {earth.position.y:e}")
-print(f"Z: {earth.position.z:e}")
-print("Velocity")
-print(f"X: {earth.velocity.x:e}")
-print(f"Y: {earth.velocity.y:e}")
-print(f"Z: {earth.velocity.z:e}")
-
-print ("Angular momentum: " + format(earth.h,'3e'))
-
-
-fig = plt.figure()
-ax = plt.axes(projection = '3d')
-plot3, = ax.plot([],[],[],'bo', markersize=0.5)
-plot3v, = ax.plot([],[],[],'ro', markersize=0.5)
-plot3h, = ax.plot([],[],[],'go', markersize=0.5)
-
-X = []
-Y = []
-Z = []
-Xint = [earth.position.x]
-Yint = [earth.position.y]
-Zint = [earth.position.z]
-Xvint = [earth.velocity.x]
-Yvint = [earth.velocity.y]
-Zvint = [earth.velocity.z]
-Xv = []
-Yv = []
-Zv = []
-Xh = []
-Yh = []
-Zh = []
-
-
-positions = [0,0,0]
-epoch = calcJD(calcJDN_GC(2000,1,1),12,0,0)
-
-
-earth = Body("Earth", Earth["mass"], Earth["radius"])
-
-
-
-
-
-def update(y):
-    y = y
-    earth.loadKeplerian(1.496534962730336e8, # a
-        1.711862905357640e-2, # e
-        4.181344269688850e-4, # i
-        1.350829426264774e2, # Ω
-        3.267259945200456e2, # ω
-        epoch + y) # t
-
-    earth.calcMeanAnomalyFromEpoch()
-    venus.calcMeanAnomalyFromEpoch()
-    halley1p.calcMeanAnomalyFromEpoch()
-    earth.calcEccentricAnomaly()
-    venus.calcEccentricAnomaly()
-    halley1p.calcEccentricAnomaly()
-    earth.calcTrueAnomaly()
-    venus.calcTrueAnomaly()
-    halley1p.calcTrueAnomaly()
-    earth.keplerianToStateVectors()
-    venus.keplerianToStateVectors()
-    halley1p.keplerianToStateVectors()
-    X.append(earth.position.x)
-    Y.append(earth.position.y)
-    Z.append(earth.position.z)
-    Xv.append(venus.position.x)
-    Yv.append(venus.position.y)
-    Zv.append(venus.position.z)
-    Xh.append(halley1p.position.x)
-    Yh.append(halley1p.position.y)
-    Zh.append(halley1p.position.z)
-    plt.axis([-1.5e11,1.5e11,-1.5e11,1.5e11])
-    ax.set_zlim(-1.5e11,1.5e11)
-    ax.figure.canvas.draw()
-    plot3.set_data_3d(X,Y,Z)
-    plot3v.set_data_3d(Xv,Yv,Zv)
-    plot3h.set_data_3d(Xh,Yh,Zh)
-
-
-animation = ani.FuncAnimation(fig, update, interval=1)
-#plt.plot(X, Y, Z)
-#plt.plot(Xv, Yv, Zv)
-#plt.plot(Xh, Yh, Zh)
-#plt.plot([0],[0],[0],'yo')
-#plt.plot(Xint,Yint,Zint,'bo')
-#plt.quiver(Xint,Yint, Zint,Xvint,Yvint, Zvint, length=2e6, color='red')
-
-plt.show()
-"""
